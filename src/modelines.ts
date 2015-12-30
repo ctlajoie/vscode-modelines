@@ -38,7 +38,7 @@ class DocumentWatcher {
 		// Listen for saves and change settings if necessary
 		subscriptions.push(vscode.workspace.onDidSaveTextDocument(doc => {
 			// console.log('onDidSaveTextDocument: %s', doc.fileName);
-			var editor = vscode.window.visibleTextEditors.find(e => e.document === doc);
+			let editor = vscode.window.visibleTextEditors.find(e => e.document === doc);
 			if (editor)
 				applyModelines(editor);
 			else
@@ -103,7 +103,7 @@ export class ModelineSearcher {
 		let codeModelineOptsRegex = /(\w+)=([^:\s]+)|(\w+)/g;
 
 		let parseOption = (name:string, value:string):any => {
-			var parsedVal = this._parseGenericValue(value);
+			let parsedVal = this._parseGenericValue(value);
 			switch (name) {
 				case 'expandtab': case 'et':
 					return { insertSpaces: true };
