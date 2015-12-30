@@ -7,50 +7,42 @@ const NUM_LINES_TO_SEARCH = 10;
 const MAX_LINE_LENGTH = 500;
 
 export function activate(context: vscode.ExtensionContext) {
-	let docWatcher = new DocumentWatcher();
-	context.subscriptions.push(docWatcher);
-
 	context.subscriptions.push(vscode.commands.registerCommand('modelines.apply', () => {
 		applyModelines(vscode.window.activeTextEditor);
 	}));
 
-	setImmediate(() => applyModelines(vscode.window.activeTextEditor));
-}
-
-class DocumentWatcher {
-	private _disposable: vscode.Disposable;
-
-	constructor() {
-		let subscriptions: vscode.Disposable[] = [];
-
-		// Listen for new documents being openend
-		subscriptions.push(vscode.workspace.onDidOpenTextDocument(doc => {
-			// console.log('onDidOpenTextDocument: %s', doc.fileName);
-			setTimeout(() => {
-				let editor = vscode.window.visibleTextEditors.find(e => e.document === doc);
-				if (editor)
-					applyModelines(editor);
-				else
-					console.log('could not find editor');
-			}, 100);
-		}));
-
-		// Listen for saves and change settings if necessary
-		subscriptions.push(vscode.workspace.onDidSaveTextDocument(doc => {
-			// console.log('onDidSaveTextDocument: %s', doc.fileName);
+	// Listen for new documents being openend
+	context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(doc => {
+		// apparently the window.visibleTextEditors array is not up to date at this point,
+		// so we have to work around that by waiting a bit.
+		let tryApplyModelines = ():boolean => {
 			let editor = vscode.window.visibleTextEditors.find(e => e.document === doc);
-			if (editor)
+			if (editor) {
 				applyModelines(editor);
-			else
-				console.log('could not find editor');
-		}));
+				return true;
+			}
+			return false;
+		};
 
-		this._disposable = vscode.Disposable.from(...subscriptions);
-	}
+		setTimeout(() => {
+			if (!tryApplyModelines()) {
+				// if it's still not available, try one more time after 500ms
+				setTimeout(() => {
+					if (!tryApplyModelines())
+						console.log('[modelines] could not find TextEditor')
+				}, 500);
+			}
+		}, 100);
+	}));
 
-	public dispose(): void {
-		this._disposable.dispose();
-	}
+	// Listen for saves and change settings if necessary
+	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(doc => {
+		let editor = vscode.window.visibleTextEditors.find(e => e.document === doc);
+		if (editor)
+			applyModelines(editor);
+	}));
+
+	setImmediate(() => applyModelines(vscode.window.activeTextEditor));
 }
 
 export class ModelineSearcher {
@@ -72,18 +64,20 @@ export class ModelineSearcher {
 		let codeModelineRegex = /^.{0,8}code:(.*)/;
 		let codeModelineOptsRegex = /(\w+)=([^\s]+)/g;
 
-		let parseOption = (name:string, value:string) => {
-			let newname = name.replace('editor.', '');
-			let newval = this._parseGenericValue(value);
-
-			switch (newname.toLowerCase()) {
-				case 'insertspaces': newname = 'insertSpaces'; break;
-				case 'tabsize': newname = 'tabSize'; break;
+		let parseOption = (name:string, value:string):any => {
+			name = name.replace('editor.', '');
+			let parsedVal = this._parseGenericValue(value);
+			switch (name.toLowerCase()) {
+				case 'insertspaces':
+					return { insertSpaces: parsedVal };
+				case 'tabsize':
+					return { tabSize: parsedVal };
+				case 'language':
+				case 'lang':
+					return { language: parsedVal };
+				default:
+					return {};
 			}
-
-			let result = {};
-			result[newname] = newval;
-			return result;
 		};
 
 		let options = {};
@@ -113,6 +107,8 @@ export class ModelineSearcher {
 				case 'softtabstop': case 'sts':
 				case 'shiftwidth': case 'sw':
 					return { tabSize: parsedVal };
+				case 'filetype': case 'ft':
+					return { language: parsedVal };
 				default:
 					return {};
 			}
@@ -132,7 +128,39 @@ export class ModelineSearcher {
 	}
 
 	private getEmacsModelineOptions(searchLines:string[]): any {
-		return {};
+		let emacsModelineRegex = /^.{0,8}-\*-\s*(.*)-\*-/;
+		let emacsModelineOptRegex = /([\w-]+):\s*([^;\s]*)|^(\w+)\s*$/g;
+
+		let parseOption = (name:string, value:string):any => {
+			// if there is no value then this was a modeline that looked like -*- C -*-
+			// this is shorthand for mode:C
+			if (!value)
+				return { language: name.trim().toLowerCase() };
+
+			let parsedVal = this._parseGenericValue(value);
+			switch (name) {
+				case 'indent-tabs-mode':
+					return { insertSpaces: parsedVal == 'nil' };
+				case 'tab-width':
+					return { tabSize: parsedVal };
+				case 'mode':
+					return { language: parsedVal };
+				default:
+					return {};
+			}
+		};
+
+		let options = {};
+		searchLines.forEach(line => {
+			let match = line.match(emacsModelineRegex);
+			if (match) {
+				let opts = match[1];
+				while (match = emacsModelineOptRegex.exec(opts))
+					extend(options, parseOption(match[1] || match[3], match[2]));
+			}
+		});
+
+		return options;
 	}
 
 	private getLinesToSearch(): string[] {
@@ -148,6 +176,7 @@ export class ModelineSearcher {
 
 	private _parseGenericValue(value:string): any {
 		if (typeof value != 'string') return value;
+		value = value.trim();
 		if (/^(true|false)$/i.test(value)) {
 			return value.toLowerCase() == 'true';
 		} else if (/^[0-9]+$/.test(value)) {
@@ -161,18 +190,14 @@ export function applyModelines(editor: vscode.TextEditor): void {
 	if (!editor || editor.document.isUntitled)
 		return;
 	try {
-		editor.show
 		let searcher = new ModelineSearcher(editor.document);
 		let options = searcher.getModelineOptions();
 		//console.log('[modelines] setting editor options: %s', JSON.stringify(options, null, "\t"));
+
 		extend(editor.options, options);
 		// assignment is necessary to trigger the change
 		editor.options = editor.options;
 	} catch (err) {
-		// using string errors internally to represent errors to show to user
-		if (typeof err == 'string')
-			vscode.window.showErrorMessage('Modeline error: %s', err);
-		else
-			console.error(err);
+		console.error(err);
 	}
 }

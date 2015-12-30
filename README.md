@@ -1,15 +1,12 @@
 # Modelines
-This extension adds the ability to set certain editor settings from "[modelines](http://vim.wikia.com/wiki/Modeline_magic)".
-The settings only affect the file where the modeline appears. This extension supports Vim and Emacs modelines
-as well as a Code-specific syntax demonstrated below.
-The modeline(s) must appear somewhere in the **first or last 10 lines of the file**.
+This extension adds the ability to set certain editor settings from "[modelines](http://vim.wikia.com/wiki/Modeline_magic)". The settings only affect the file where the modeline appears. This extension supports Vim and Emacs modelines as well as a Code-specific syntax demonstrated below. The modeline(s) must appear somewhere in the **first or last 10 lines of the file**.
 
-Here are a few examples demonstrating the different types of modelines supported.
+Here are a few examples demonstrating the different types of modelines supported. All of the examples below are equivelent.
 ```
-# vim: set ts=8 sw=8 et:
-# vim: ts=8:sw=8:et
+# vim: set ts=4 sw=4 et:
+# vim: ts=4:sw=4:et
 // -*- indent-tabs-mode: nil; tab-width: 4 -*-
-/* code: insertSpaces=false tabSize=4 */
+/* code: insertSpaces=true tabSize=4 */
 ```
 
 ## Limitations
