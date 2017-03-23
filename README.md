@@ -13,3 +13,4 @@ Here are a few examples demonstrating the different types of modelines supported
 Due to limitations in the API, the only settings currently supported are `insertSpaces` and `tabSize`.
 Sadly, this means the language can't currently be set with `ft=js` (Vim modelines) or `mode:js` (Emacs modelines).
 When this becomes possible (as it surely will in a future version of Code) I will update the extension to add support.
+The feature request is being tracked here: https://github.com/Microsoft/vscode/issues/1800
