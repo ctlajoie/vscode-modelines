@@ -217,9 +217,17 @@ export function applyModelines(editor: vscode.TextEditor|undefined): void {
 function translateLanguageName(lang: string|undefined): string {
 	if (lang === undefined)
 		return '';
-	switch (lang) {
+	switch (lang.toLowerCase()) {
 		case 'js':
 			return 'javascript';
+		case 'c++':
+			return 'cpp';
+		case 'c#':
+			return 'csharp';
+		case 'f#':
+			return 'fsharp';
+		case 'objective-c++':
+			return 'objective-cpp';
 		default:
 			return lang;
 	}
