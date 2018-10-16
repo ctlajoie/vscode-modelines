@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import extend = require('extend');
 
 // look at this number of lines at the top/bottom of the file
-const NUM_LINES_TO_SEARCH = 10;
+const NUM_LINES_TO_SEARCH = 5;
 // don't try to find modelines on lines longer than this
 const MAX_LINE_LENGTH = 500;
 
@@ -65,7 +65,6 @@ export class ModelineSearcher {
 		let codeModelineOptsRegex = /(\w+)=([^\s]+)/g;
 
 		let parseOption = (name:string, value:string):any => {
-			name = name.replace('editor.', '');
 			let parsedVal = this._parseGenericValue(value);
 			switch (name.toLowerCase()) {
 				case 'insertspaces':
@@ -138,7 +137,7 @@ export class ModelineSearcher {
 				return { language: name.trim().toLowerCase() };
 
 			let parsedVal = this._parseGenericValue(value);
-			switch (name) {
+			switch (name.toLowerCase()) {
 				case 'indent-tabs-mode':
 					return { insertSpaces: parsedVal == 'nil' };
 				case 'tab-width':
@@ -186,18 +185,42 @@ export class ModelineSearcher {
 	}
 }
 
-export function applyModelines(editor: vscode.TextEditor): void {
-	if (!editor || editor.document.isUntitled)
+export function applyModelines(editor: vscode.TextEditor|undefined): void {
+	if (!editor || !editor.document || editor.document.isUntitled)
 		return;
 	try {
 		let searcher = new ModelineSearcher(editor.document);
 		let options = searcher.getModelineOptions();
-		//console.log('[modelines] setting editor options: %s', JSON.stringify(options, null, "\t"));
+		console.log('[modelines] setting editor options: ' + JSON.stringify(options));
+		let language = translateLanguageName(options.language);
+		if (options.language)
+			delete options.language;
 
 		extend(editor.options, options);
 		// assignment is necessary to trigger the change
 		editor.options = editor.options;
+
+		if (language && language.length > 0) {
+			vscode.languages.getLanguages().then(codelangs => {
+				let codelang = codelangs.find(codelang => codelang.toLowerCase() === language.toLowerCase());
+				if (codelang) {
+					console.log('[modelines] setting language to '+codelang);
+					vscode.languages.setTextDocumentLanguage(editor.document, codelang);
+				}
+			});
+		}
 	} catch (err) {
 		console.error(err);
+	}
+}
+
+function translateLanguageName(lang: string|undefined): string {
+	if (lang === undefined)
+		return '';
+	switch (lang) {
+		case 'js':
+			return 'javascript';
+		default:
+			return lang;
 	}
 }
