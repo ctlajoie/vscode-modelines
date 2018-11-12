@@ -228,6 +228,12 @@ function translateLanguageName(lang: string|undefined): string {
 			return 'fsharp';
 		case 'objective-c++':
 			return 'objective-cpp';
+		case 'sh':
+		case 'zsh':
+		case 'ksh':
+		case 'csh':
+		case 'bash':
+			return 'shellscript';
 		default:
 			return lang;
 	}
