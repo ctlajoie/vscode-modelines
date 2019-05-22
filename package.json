@@ -47,6 +47,7 @@
     "@types/extend": "^3.0.0"
   },
   "dependencies": {
+    "event-stream": "^4.0.1",
     "extend": "^3.0.2"
   }
 }
