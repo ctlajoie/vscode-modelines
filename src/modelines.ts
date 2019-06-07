@@ -92,7 +92,7 @@ export class ModelineSearcher {
 	}
 
 	private getVimModelineOptions(searchLines:string[]): any {
-		let codeModelineRegex = /^.{0,8}vim:(.*)/;
+		let codeModelineRegex = /^.{0,8}(ex|[vV]im?):(.*)/;
 		let codeModelineOptsRegex = /(\w+)=([^:\s]+)|(\w+)/g;
 
 		let parseOption = (name:string, value:string):any => {
@@ -117,7 +117,7 @@ export class ModelineSearcher {
 		searchLines.forEach(line => {
 			let match = line.match(codeModelineRegex);
 			if (match) {
-				let opts = match[1];
+				let opts = match[2];
 				while (match = codeModelineOptsRegex.exec(opts))
 					extend(options, parseOption(match[1] || match[3], match[2]));
 			}
