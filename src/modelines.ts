@@ -127,8 +127,8 @@ export class ModelineSearcher {
 	}
 
 	private getEmacsModelineOptions(searchLines:string[]): any {
-		let emacsModelineRegex = /^.{0,8}-\*-\s*(.*)-\*-/;
-		let emacsModelineOptRegex = /([\w-]+):\s*([^;\s]*)|^(\w+)\s*$/g;
+		let emacsModelineRegex = /^.*-\*-\s*(.*)-\*-/;
+		let emacsModelineOptRegex = /([\w-]+):\s*([^;\s]*)|^([\w+-]+)\s*$/g;
 
 		let parseOption = (name:string, value:string):any => {
 			// if there is no value then this was a modeline that looked like -*- C -*-
