@@ -127,7 +127,7 @@ export class ModelineSearcher {
 	}
 
 	private getEmacsModelineOptions(searchLines:string[]): any {
-		let emacsModelineRegex = /^.*-\*-\s*(.*)-\*-/;
+		let emacsModelineRegex = /-\*-\s*(.*)-\*-/;
 		let emacsModelineOptRegex = /([\w-]+):\s*([^;\s]*)|^([\w+-]+)\s*$/g;
 
 		let parseOption = (name:string, value:string):any => {
