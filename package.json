@@ -2,7 +2,7 @@
   "name": "vscode-modelines",
   "displayName": "Modelines",
   "description": "Set editor options for individual files. Supports Vim and Emacs modelines plus a Code-specific modeline syntax.",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "publisher": "chrislajoie",
   "homepage": "https://github.com/ctlajoie/vscode-modelines",
   "bugs": {
