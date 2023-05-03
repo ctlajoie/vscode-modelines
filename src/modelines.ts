@@ -106,7 +106,7 @@ export class ModelineSearcher {
 				case 'softtabstop': case 'sts':
 				case 'shiftwidth': case 'sw':
 					return { tabSize: parsedVal };
-				case 'filetype': case 'ft':
+				case 'syntax': case 'filetype': case 'ft':
 					return { language: parsedVal };
 				default:
 					return {};
