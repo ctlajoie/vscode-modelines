@@ -236,6 +236,8 @@ function translateLanguageName(lang: string|undefined): string {
 			return 'shellscript';
 		case 'makefile-gmake':
 			return 'makefile';
+		case 'sshconfig':
+			return 'ssh_config';
 		default:
 			return lang;
 	}
